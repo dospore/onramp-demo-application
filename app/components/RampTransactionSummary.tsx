@@ -1,7 +1,9 @@
+import { fetchOnrampQuote } from '@coinbase/onchainkit/fund';
 import { Address } from '@coinbase/onchainkit/identity';
 import ChevronDownIcon from '@heroicons/react/24/outline/ChevronDownIcon';
 import ChevronUpIcon from '@heroicons/react/24/outline/ChevronUpIcon';
 import CreditCardIcon from '@heroicons/react/24/outline/CreditCardIcon';
+import InformationCircleIcon from '@heroicons/react/24/outline/InformationCircleIcon';
 import {
   Button,
   Card,
@@ -14,8 +16,8 @@ import {
 import { useSearchParams } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useCoinbaseRampTransaction } from '../contexts/CoinbaseRampTransactionContext';
-import { generateBuyQuote, generateSecureToken } from '../queries';
-import { BuyQuoteRequest, TxSuccessSummaryPayload } from '../types';
+import { generateSecureToken } from '../queries';
+import { TxSuccessSummaryPayload } from '../types';
 import { formatCurrency, getCurrencySymbol } from '../utils/currency';
 import {
   getTxSuccessSummaryPayloadLocalStorageEntry,
@@ -23,7 +25,6 @@ import {
 } from '../utils/localStorage';
 import { RampTransactionSuccess } from './RampTransactionSuccess';
 import { WalletConnector } from './WalletConnector';
-import InformationCircleIcon from '@heroicons/react/24/outline/InformationCircleIcon';
 
 export const RampTransactionSummary = () => {
   const {
@@ -78,7 +79,11 @@ export const RampTransactionSummary = () => {
     }
 
     return true;
-  }, [rampTransaction?.amount, selectedPaymentMethod]);
+  }, [
+    rampTransaction?.amount,
+    selectedPaymentMethod,
+    selectedPaymentMethodLimit?.min,
+  ]);
 
   useEffect(() => {
     const getSecureToken = async () => {
@@ -116,8 +121,8 @@ export const RampTransactionSummary = () => {
   const getExchangePrice = (decimals = 5) => {
     if (isOnrampActive && buyQuote) {
       return (
-        Number(buyQuote.payment_subtotal?.value) /
-        Number(buyQuote.purchase_amount?.value)
+        Number(buyQuote.paymentSubtotal?.value) /
+        Number(buyQuote.purchaseAmount?.value)
       ).toFixed(decimals);
     }
 
@@ -127,17 +132,15 @@ export const RampTransactionSummary = () => {
   useEffect(() => {
     const fetchBuyQuote = async () => {
       try {
-        const payload: BuyQuoteRequest = {
-          purchase_currency: selectedPurchaseCurrency?.symbol || '',
-          payment_amount: Number(rampTransaction?.amount).toFixed(2),
-          payment_currency: String(rampTransaction?.currency),
-          payment_method: String(rampTransaction?.paymentMethod),
+        const response = await fetchOnrampQuote({
+          purchaseCurrency: selectedPurchaseCurrency?.symbol || '',
+          paymentCurrency: String(rampTransaction?.currency),
+          paymentMethod: String(rampTransaction?.paymentMethod),
+          paymentAmount: Number(rampTransaction?.amount).toFixed(2),
           country: String(rampTransaction?.country?.id),
           subdivision: String(selectedSubdivision),
-          purchase_network: selectedPurchaseCurrencyNetwork?.name || '',
-        };
-
-        const response = await generateBuyQuote(payload);
+          purchaseNetwork: selectedPurchaseCurrencyNetwork?.name || '',
+        });
 
         setBuyQuote(response);
       } catch (err) {
@@ -194,8 +197,8 @@ export const RampTransactionSummary = () => {
 
   const transactionLink = useMemo(() => {
     const quoteId =
-      (isOnrampActive && buyQuote?.quote_id
-        ? buyQuote.quote_id
+      (isOnrampActive && buyQuote?.quoteId
+        ? buyQuote.quoteId
         : sellQuote?.quote_id) || '';
     return encodeURI(
       `https://pay.coinbase.com/${isOnrampActive ? 'buy' : 'sell'}/one-click?sessionToken=${secureToken}` +
@@ -240,7 +243,12 @@ export const RampTransactionSummary = () => {
       } as TxSuccessSummaryPayload);
     }
     window.location.href = transactionLink;
-  }, [transactionLink]);
+  }, [
+    rampTransaction?.amount,
+    rampTransaction?.wallet,
+    selectedPurchaseCurrency?.symbol,
+    transactionLink,
+  ]);
 
   const getTransactionSummaryLabel = () => {
     const action = isOnrampActive ? 'Buy' : 'Sell';
@@ -254,23 +262,26 @@ export const RampTransactionSummary = () => {
 
   const getAmountReceived = () => {
     return isOnrampActive
-      ? `${formatCurrency(buyQuote?.purchase_amount?.value || '0', buyQuote?.purchase_amount?.currency || '', 3, true)}`
+      ? `${formatCurrency(buyQuote?.purchaseAmount?.value || '0', buyQuote?.purchaseAmount?.currency || '', 3, true)}`
       : `${formatCurrency(sellQuote?.sell_amount?.value || '0', sellQuote?.sell_amount?.currency || '', 3, true)}`;
   };
 
   const getTotalCostLabel = () => {
-    const quoteToUse = isOnrampActive ? buyQuote : sellQuote;
     const fees = formatCurrency(
       (
-        (Number(quoteToUse?.coinbase_fee?.value) || 0) +
-        ((isOnrampActive && Number(buyQuote?.network_fee?.value)) || 0)
+        (Number(
+          isOnrampActive
+            ? buyQuote?.coinbaseFee?.value
+            : sellQuote?.coinbase_fee?.value
+        ) || 0) + ((isOnrampActive && Number(buyQuote?.networkFee?.value)) || 0)
       ).toString(),
       getCurrencySymbol(rampTransaction?.currency)
     );
+
     const currencySymbol = getCurrencySymbol(rampTransaction?.currency);
     const totalCost = formatCurrency(
       (isOnrampActive
-        ? buyQuote?.payment_total?.value
+        ? buyQuote?.paymentTotal?.value
         : sellQuote?.cashout_total?.value) || '0',
       currencySymbol
     );
@@ -454,11 +465,11 @@ export const RampTransactionSummary = () => {
                     <div className="flex justify-between">
                       <span>Network Fee:</span>
                       <span className="text-slate-500">
-                        {Number(buyQuote?.network_fee?.value) == 0
+                        {Number(buyQuote?.networkFee?.value) == 0
                           ? 'Free'
                           : formatCurrency(
-                              buyQuote?.network_fee?.value || '0',
-                              getCurrencySymbol(buyQuote?.network_fee?.currency)
+                              buyQuote?.networkFee?.value || '0',
+                              getCurrencySymbol(buyQuote?.networkFee?.currency)
                             )}
                       </span>
                     </div>
@@ -466,13 +477,11 @@ export const RampTransactionSummary = () => {
                     <div className="flex justify-between">
                       <span>Coinbase Fee:</span>
                       <span className="text-slate-500">
-                        {Number(buyQuote?.coinbase_fee?.value) == 0
+                        {Number(buyQuote?.coinbaseFee?.value) == 0
                           ? 'Free'
                           : formatCurrency(
-                              buyQuote?.coinbase_fee?.value || '0',
-                              getCurrencySymbol(
-                                buyQuote?.coinbase_fee?.currency
-                              )
+                              buyQuote?.coinbaseFee?.value || '0',
+                              getCurrencySymbol(buyQuote?.coinbaseFee?.currency)
                             )}
                       </span>
                     </div>

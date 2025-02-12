@@ -1,3 +1,4 @@
+import { OnrampPaymentMethod } from '@coinbase/onchainkit/fund';
 import { Autocomplete, AutocompleteItem, Skeleton } from '@nextui-org/react';
 import { Key, useState } from 'react';
 import { useCoinbaseRampTransaction } from '../contexts/CoinbaseRampTransactionContext';
@@ -25,7 +26,7 @@ export const CurrencySelector = () => {
     if (value) {
       if (isOnrampActive && buyOptions) {
         const newCurrency =
-          buyOptions.payment_currencies.find(
+          buyOptions.paymentCurrencies.find(
             (currency) => currency.id === value
           ) || null;
         setSelectedCurrency(newCurrency);
@@ -48,7 +49,7 @@ export const CurrencySelector = () => {
   };
 
   const handlePaymentMethodSelection = (key: Key | null) => {
-    const method = selectedCountry?.payment_methods.find(
+    const method = selectedCountry?.paymentMethods.find(
       (method) => method.id === key
     );
 
@@ -64,7 +65,7 @@ export const CurrencySelector = () => {
   const getCurrencies = () => {
     return (
       (isOnrampActive
-        ? buyOptions?.payment_currencies
+        ? buyOptions?.paymentCurrencies
         : sellOptions?.cashout_currencies) || []
     );
   };
@@ -104,8 +105,8 @@ export const CurrencySelector = () => {
                 onSelectionChange={handlePaymentMethodSelection}
                 selectedKey={rampTransaction?.paymentMethod}
               >
-                {(selectedCountry?.payment_methods || []).map(
-                  (paymentMethod) => (
+                {(selectedCountry?.paymentMethods || []).map(
+                  (paymentMethod: OnrampPaymentMethod) => (
                     <AutocompleteItem
                       key={paymentMethod.id}
                       value={paymentMethod.id}
