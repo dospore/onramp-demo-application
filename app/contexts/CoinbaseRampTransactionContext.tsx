@@ -135,15 +135,12 @@ export const CoinbaseRampTransactionProvider = ({
     Array<OnrampConfigCountry & { name?: string }>
   >(() => {
     return (
-      buyConfig?.countries.map(
-        ({ id, subdivisions, paymentMethods, disable3dsCards }) => ({
-          id,
-          name: isocountries.getName(id, 'en'),
-          subdivisions,
-          paymentMethods,
-          disable3dsCards,
-        })
-      ) || []
+      buyConfig?.countries.map(({ id, subdivisions, paymentMethods }) => ({
+        id,
+        name: isocountries.getName(id, 'en'),
+        subdivisions,
+        paymentMethods,
+      })) || []
     );
   }, [buyConfig]);
   const [selectedCurrency, setSelectedCurrency] =
