@@ -109,7 +109,9 @@ export const CoinbaseRampTransactionProvider = ({
     null
   );
   const [selectedPurchaseCurrencyNetwork, setSelectedPurchaseCurrencyNetwork] =
-    useState<OnrampPurchaseCurrency['networks'][0] | null>(null);
+    useState<OnrampPurchaseCurrency['networks'][0] | PurchaseCurrency | null>(
+      null
+    );
   const [selectedPurchaseCurrency, setSelectedPurchaseCurrency] =
     useState<OnrampPurchaseCurrency | null>(null);
   const [selectedSellCurrencyNetwork, setSelectedSellCurrencyNetwork] =
