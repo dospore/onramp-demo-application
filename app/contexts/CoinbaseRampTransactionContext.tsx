@@ -158,10 +158,13 @@ export const CoinbaseRampTransactionProvider = ({
     setRampTransaction({ ...rampTransaction, ...rampTransactionUpdate });
   };
 
-  const handleSetSelectedCountry = (country: OnrampConfigCountry) => {
-    setSelectedCountry(country);
-    setRampTransaction({ ...rampTransaction, country: country });
-  };
+  const handleSetSelectedCountry = useCallback(
+    (country: OnrampConfigCountry) => {
+      setSelectedCountry(country);
+      setRampTransaction({ ...rampTransaction, country: country });
+    },
+    [rampTransaction, setRampTransaction, setSelectedCountry]
+  );
 
   useEffect(() => {
     if (isOfframpActive) {

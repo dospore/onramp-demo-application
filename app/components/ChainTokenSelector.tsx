@@ -1,5 +1,5 @@
 import { Autocomplete, AutocompleteItem, Skeleton } from '@nextui-org/react';
-import { Key, useEffect } from 'react';
+import { Key, useEffect, useMemo } from 'react';
 import { useCoinbaseRampTransaction } from '../contexts/CoinbaseRampTransactionContext';
 import { generateSellOptions } from '../queries';
 
@@ -133,6 +133,18 @@ export const ChainTokenSelector = () => {
       : selectedSellCurrency?.id;
   };
 
+  const networkDisplayNames = useMemo(() => {
+    if (isOnrampActive) {
+      return (selectedPurchaseCurrency?.networks ?? []).map(
+        ({ displayName }) => displayName
+      );
+    }
+
+    return (selectedSellCurrency?.networks ?? []).map(
+      ({ display_name }) => display_name
+    );
+  }, [isOnrampActive, selectedPurchaseCurrency, selectedSellCurrency]);
+
   return (
     <div className="flex flex-col gap-4">
       {loadingBuyOptions ? (
@@ -177,25 +189,15 @@ export const ChainTokenSelector = () => {
                 : selectedSellCurrencyNetwork?.display_name
             }
           >
-            {isOnrampActive
-              ? (selectedPurchaseCurrency?.networks || []).map((network) => (
-                  <AutocompleteItem
-                    key={network.displayName}
-                    value={network.displayName}
-                    className="capitalize"
-                  >
-                    {network.displayName}
-                  </AutocompleteItem>
-                ))
-              : (selectedSellCurrency?.networks || []).map((network) => (
-                  <AutocompleteItem
-                    key={network.display_name}
-                    value={network.display_name}
-                    className="capitalize"
-                  >
-                    {network.display_name}
-                  </AutocompleteItem>
-                ))}
+            {networkDisplayNames.map((networkDisplayName) => (
+              <AutocompleteItem
+                key={networkDisplayName}
+                value={networkDisplayName}
+                className="capitalize"
+              >
+                {networkDisplayName}
+              </AutocompleteItem>
+            ))}
           </Autocomplete>
         </>
       )}

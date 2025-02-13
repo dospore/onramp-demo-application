@@ -29,7 +29,6 @@ export const FundCardDemo = () => {
     FundCardPropsReact['presetAmountInputs']
   >(['10', '20', '30']);
 
-  // const [currencyInputValue, setCurrencyInputValue] = useState('');
   const handleCurrencySelection = (value: Key | null) => {
     if (value) {
       if (buyOptions) {
@@ -75,9 +74,6 @@ export const FundCardDemo = () => {
                 className="w-[200px] my-auto"
                 onSelectionChange={handleCurrencySelection}
                 selectedKey={selectedCurrency?.id}
-                //onInputChange={setCurrencyInputValue}
-                //onFocus={() => setUserFocusOnCurrencyInput(true)}
-                //onFocusChange={() => setUserFocusOnCurrencyInput(false)}
               >
                 {availableCurrencies.map((currency) => (
                   <AutocompleteItem key={currency.id} value={currency.id}>

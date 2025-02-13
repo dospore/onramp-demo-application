@@ -33,17 +33,14 @@ export const CustomIntegrationDemo = () => {
         )}
       </div>
       <div className="flex flex-col gap-4 justify-center items-center">
-        <div>
-          <RegionSelector />
-        </div>
+        <RegionSelector />
+
         <div className="flex flex-col md:flex-row justify-around min-h-[750px] max-w-screen md:w-[1000px] m-auto gap-4 md:gap-0">
           <div className="flex flex-col gap-4 grow">
-            <div>
-              <AmountInput />
-              <div className="flex flex-col md:flex-row gap-4 items-center justify-around">
-                <ChainTokenSelector />
-                <CurrencySelector />
-              </div>
+            <AmountInput />
+            <div className="flex flex-col md:flex-row gap-4 items-center justify-around">
+              <ChainTokenSelector />
+              <CurrencySelector />
             </div>
           </div>
 
