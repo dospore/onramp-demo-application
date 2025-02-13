@@ -1,7 +1,7 @@
 import { Autocomplete, AutocompleteItem, Skeleton } from '@nextui-org/react';
-import { Key, useEffect } from 'react';
+import { Key, useEffect, useMemo } from 'react';
 import { useCoinbaseRampTransaction } from '../contexts/CoinbaseRampTransactionContext';
-import { generateBuyOptions, generateSellOptions } from '../queries';
+import { generateSellOptions } from '../queries';
 
 export interface Token {
   id: string;
@@ -38,24 +38,6 @@ export const ChainTokenSelector = () => {
   } = useCoinbaseRampTransaction();
 
   useEffect(() => {
-    const getBuyOptions = async () => {
-      try {
-        setLoadingBuyOptions(true);
-        if (selectedCountry && !buyOptions) {
-          const buyOptions = await generateBuyOptions({
-            country: selectedCountry.id,
-            subdivision: selectedSubdivision ? selectedSubdivision : '',
-          });
-
-          setBuyOptions(buyOptions);
-        }
-      } catch (error) {
-        console.error('Error fetching buy options:', error);
-      } finally {
-        setLoadingBuyOptions(false);
-      }
-    };
-
     const getSellOptions = async () => {
       try {
         setLoadingSellOptions(true);
@@ -74,7 +56,6 @@ export const ChainTokenSelector = () => {
       }
     };
 
-    getBuyOptions();
     getSellOptions();
   }, [
     selectedCountry,
@@ -91,7 +72,7 @@ export const ChainTokenSelector = () => {
   const handleTokenSelectionChange = (key: Key | null) => {
     if (key) {
       if (isOnrampActive) {
-        const selectedPurchaseCurrency = buyOptions?.purchase_currencies.find(
+        const selectedPurchaseCurrency = buyOptions?.purchaseCurrencies.find(
           (pc) => pc.id === key
         );
 
@@ -124,7 +105,7 @@ export const ChainTokenSelector = () => {
     if (key) {
       if (isOnrampActive) {
         const selectedNetwork = selectedPurchaseCurrency?.networks.find(
-          (n) => n.display_name === key
+          (n) => n.displayName === key
         );
 
         if (selectedNetwork) {
@@ -152,6 +133,18 @@ export const ChainTokenSelector = () => {
       : selectedSellCurrency?.id;
   };
 
+  const networkDisplayNames = useMemo(() => {
+    if (isOnrampActive) {
+      return (selectedPurchaseCurrency?.networks ?? []).map(
+        ({ displayName }) => displayName
+      );
+    }
+
+    return (selectedSellCurrency?.networks ?? []).map(
+      ({ display_name }) => display_name
+    );
+  }, [isOnrampActive, selectedPurchaseCurrency, selectedSellCurrency]);
+
   return (
     <div className="flex flex-col gap-4">
       {loadingBuyOptions ? (
@@ -172,7 +165,7 @@ export const ChainTokenSelector = () => {
           >
             {(
               (isOnrampActive
-                ? buyOptions?.purchase_currencies
+                ? buyOptions?.purchaseCurrencies
                 : sellOptions?.sell_currencies) || []
             ).map((purchaseCurrency) => (
               <AutocompleteItem
@@ -192,21 +185,17 @@ export const ChainTokenSelector = () => {
             onSelectionChange={handleNetworkSelectionChange}
             selectedKey={
               isOnrampActive
-                ? selectedPurchaseCurrencyNetwork?.display_name
+                ? selectedPurchaseCurrencyNetwork?.displayName
                 : selectedSellCurrencyNetwork?.display_name
             }
           >
-            {(
-              (isOnrampActive
-                ? selectedPurchaseCurrency?.networks
-                : selectedSellCurrency?.networks) || []
-            ).map((network) => (
+            {networkDisplayNames.map((networkDisplayName) => (
               <AutocompleteItem
-                key={network.display_name}
-                value={network.display_name}
+                key={networkDisplayName}
+                value={networkDisplayName}
                 className="capitalize"
               >
-                {network.display_name}
+                {networkDisplayName}
               </AutocompleteItem>
             ))}
           </Autocomplete>

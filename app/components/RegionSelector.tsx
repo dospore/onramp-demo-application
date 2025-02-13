@@ -5,9 +5,10 @@ import {
   Skeleton,
 } from '@nextui-org/react';
 import { Key } from '@react-types/shared';
-import { useCoinbaseRampTransaction } from '../contexts/CoinbaseRampTransactionContext';
-import { useMemo } from 'react';
 import Image from 'next/image';
+import { useMemo } from 'react';
+import { useCoinbaseRampTransaction } from '../contexts/CoinbaseRampTransactionContext';
+
 export const RegionSelector = () => {
   const {
     countries,
@@ -28,9 +29,8 @@ export const RegionSelector = () => {
 
   const handleCountrySelectionChange = (selectedKey: Key | null) => {
     if (selectedKey) {
-      setSelectedCountry(
-        countries.find((country) => country.id === selectedKey)!
-      );
+      const country = countries.find((country) => country.id === selectedKey)!;
+      setSelectedCountry(country);
     }
   };
 
@@ -47,7 +47,7 @@ export const RegionSelector = () => {
   };
 
   return (
-    <div className="flex flex-row justify-end gap-4 m-auto">
+    <div className="flex flex-row gap-4 m-auto">
       {loadingBuyConfig ? (
         <>
           <Skeleton className="h-10 w-[200px] rounded-lg" />
@@ -60,7 +60,7 @@ export const RegionSelector = () => {
             variant="underlined"
             onSelectionChange={handleCountrySelectionChange}
             className="max-w-[200px] mx-auto sm:mx-0"
-            label="Select country"
+            label="country"
             selectedKey={selectedCountry?.id}
             startContent={
               selectedCountry && (
@@ -95,8 +95,8 @@ export const RegionSelector = () => {
               isClearable={false}
               variant="underlined"
               onSelectionChange={handleSubdivisionSelectionChange}
-              className="max-w-[150px] mx-auto sm:mx-0"
-              label="Select State/Division"
+              className="max-w-[200px] mx-auto sm:mx-0"
+              label="subdivision"
               selectedKey={selectedSubdivision}
             >
               {subdivisions.map((subdivision) => (

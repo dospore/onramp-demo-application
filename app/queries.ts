@@ -1,16 +1,11 @@
 import { SiweMessage } from 'siwe';
 import {
   AggregatorInputParams,
-  BuyOptionsRequest,
-  BuyOptionsResponse,
-  BuyQuoteRequest,
-  BuyQuoteResponse,
   SellOptionsRequest,
   SellOptionsResponse,
   SellQuoteRequest,
   SellQuoteResponse,
 } from './types';
-import { BuyConfig } from './types/BuyConfig';
 
 export async function generateSecureToken({
   ethAddress,
@@ -36,63 +31,6 @@ export async function generateSecureToken({
     }
     const json = await response.json();
     return json.token;
-  } catch (error) {
-    throw error;
-  }
-}
-
-export async function generateBuyConfig() {
-  try {
-    const response = await fetch('/api/buy-config-api', {
-      method: 'GET',
-    });
-    if (!response.ok) {
-      console.log(await response.text());
-      throw new Error('Failed to fetch buy config');
-    }
-    const json: BuyConfig = await response.json();
-    return json;
-  } catch (error) {
-    throw error;
-  }
-}
-
-export async function generateBuyOptions({
-  country,
-  subdivision,
-}: BuyOptionsRequest) {
-  try {
-    const response = await fetch('/api/buy-options-api', {
-      method: 'POST',
-      body: JSON.stringify({ country, subdivision }),
-    });
-
-    if (!response.ok) {
-      console.log(await response.text());
-      throw new Error('Failed to fetch buy options');
-    }
-
-    const json: BuyOptionsResponse = await response.json();
-    return json;
-  } catch (error) {
-    throw error;
-  }
-}
-
-export async function generateBuyQuote(request: BuyQuoteRequest) {
-  try {
-    const response = await fetch('/api/buy-quote-api', {
-      method: 'POST',
-      body: JSON.stringify(request),
-    });
-
-    if (!response.ok) {
-      const jsonText = await response.text();
-      throw new Error(jsonText);
-    }
-
-    const json: BuyQuoteResponse = await response.json();
-    return json;
   } catch (error) {
     throw error;
   }
