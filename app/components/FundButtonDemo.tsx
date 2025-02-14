@@ -5,7 +5,6 @@ import {
   CardFooter,
   CardHeader,
   Checkbox,
-  Code,
   Input,
 } from '@nextui-org/react';
 import { useState } from 'react';
@@ -19,8 +18,6 @@ export const FundButtonDemo = () => {
 
   return (
     <div className="flex flex-col items-center justify-center flex-wrap gap-4">
-      <Code className="text-white text-2xl p-4">{'<FundButton />'}</Code>
-
       <div className="flex justify-center items-center w-[500px] gap-4 flex-col">
         <FundButton
           key={`${text}-${fiatCurrency}`}

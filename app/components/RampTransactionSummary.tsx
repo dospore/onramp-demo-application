@@ -131,6 +131,14 @@ export const RampTransactionSummary = () => {
 
   useEffect(() => {
     const fetchBuyQuote = async () => {
+      if (
+        !rampTransaction?.currency ||
+        !rampTransaction.paymentMethod ||
+        !rampTransaction.country ||
+        !selectedPurchaseCurrency?.symbol
+      ) {
+        return;
+      }
       try {
         const response = await fetchOnrampQuote({
           purchaseCurrency: selectedPurchaseCurrency?.symbol || '',
