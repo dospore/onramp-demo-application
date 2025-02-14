@@ -44,9 +44,12 @@ interface CoinbaseRampTransactionContextType {
   setSelectedCountry: (country: OnrampConfigCountry) => void;
   selectedSubdivision: string | null;
   setSelectedSubdivision: (subdivision: string) => void;
-  selectedPurchaseCurrencyNetwork: OnrampPurchaseCurrency['networks'][0] | null;
+  selectedPurchaseCurrencyNetwork:
+    | OnrampPurchaseCurrency['networks'][0]
+    | PurchaseCurrency
+    | null;
   setSelectedPurchaseCurrencyNetwork: (
-    network: OnrampPurchaseCurrency['networks'][0] | null
+    network: OnrampPurchaseCurrency['networks'][0] | PurchaseCurrency | null
   ) => void;
   selectedPurchaseCurrency: OnrampPurchaseCurrency | null;
   setSelectedPurchaseCurrency: (
@@ -109,7 +112,9 @@ export const CoinbaseRampTransactionProvider = ({
     null
   );
   const [selectedPurchaseCurrencyNetwork, setSelectedPurchaseCurrencyNetwork] =
-    useState<OnrampPurchaseCurrency['networks'][0] | null>(null);
+    useState<OnrampPurchaseCurrency['networks'][0] | PurchaseCurrency | null>(
+      null
+    );
   const [selectedPurchaseCurrency, setSelectedPurchaseCurrency] =
     useState<OnrampPurchaseCurrency | null>(null);
   const [selectedSellCurrencyNetwork, setSelectedSellCurrencyNetwork] =
