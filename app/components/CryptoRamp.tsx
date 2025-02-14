@@ -9,6 +9,7 @@ import {
   Mode,
   useCoinbaseRampTransaction,
 } from '../contexts/CoinbaseRampTransactionContext';
+import { generateSellOptions } from '../queries';
 import { CustomIntegrationDemo } from './CustomIntegrationDemo';
 import { FundButtonDemo } from './FundButtonDemo';
 import { FundCardDemo } from './FundCardDemo';
@@ -33,6 +34,10 @@ export const CryptoRamp = ({ partnerUserId }: ICryptoRampProps) => {
     selectedCountry,
     selectedSubdivision,
     buyConfig,
+    setSellOptions,
+    sellOptions,
+    setLoadingSellOptions,
+    loadingSellOptions,
   } = useCoinbaseRampTransaction();
 
   useEffect(() => {
@@ -78,7 +83,6 @@ export const CryptoRamp = ({ partnerUserId }: ICryptoRampProps) => {
             subdivision: selectedSubdivision ? selectedSubdivision : '',
           });
 
-          console.log('buyOptions', buyOptions);
           setBuyOptions(buyOptions);
         }
       } catch (error) {
@@ -88,18 +92,30 @@ export const CryptoRamp = ({ partnerUserId }: ICryptoRampProps) => {
       }
     };
 
+    const getSellOptions = async () => {
+      try {
+        setLoadingSellOptions(true);
+        if (!loadingSellOptions && selectedCountry && !sellOptions) {
+          const sellOptions = await generateSellOptions({
+            country: selectedCountry.id,
+            subdivision: selectedSubdivision ? selectedSubdivision : '',
+          });
+
+          setSellOptions(sellOptions);
+        }
+      } catch (error) {
+        console.error('Error fetching buy options:', error);
+      } finally {
+        setLoadingSellOptions(false);
+      }
+    };
+
+    getSellOptions();
+
     getBuyconfig();
     getBuyOptions();
-  }, [
-    setBuyConfig,
-    setLoadingBuyConfig,
-    setBuyOptions,
-    selectedCountry,
-    selectedSubdivision,
-    setLoadingBuyOptions,
-    buyOptions,
-    buyConfig,
-  ]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     if (authenticated && step < 2) {
@@ -125,7 +141,7 @@ export const CryptoRamp = ({ partnerUserId }: ICryptoRampProps) => {
               <Tab key="fund-button" title="Fund Button">
                 <FundButtonDemo />
               </Tab>
-              <Tab key="custom-integration" title="Custom integration">
+              <Tab key="onramp" title="Custom integration">
                 <CustomIntegrationDemo />
               </Tab>
               {/* TODO: Add offramp and enableSell Tab */}

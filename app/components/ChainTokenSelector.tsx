@@ -1,8 +1,7 @@
 import { OnrampPurchaseCurrency } from '@coinbase/onchainkit/fund';
 import { Autocomplete, AutocompleteItem, Skeleton } from '@nextui-org/react';
-import { Key, useEffect, useMemo } from 'react';
+import { Key, useMemo } from 'react';
 import { useCoinbaseRampTransaction } from '../contexts/CoinbaseRampTransactionContext';
-import { generateSellOptions } from '../queries';
 
 export interface Token {
   id: string;
@@ -18,8 +17,6 @@ export interface Chain {
 
 export const ChainTokenSelector = () => {
   const {
-    selectedCountry,
-    selectedSubdivision,
     selectedPurchaseCurrency,
     setSelectedPurchaseCurrency,
     selectedSellCurrency,
@@ -28,47 +25,11 @@ export const ChainTokenSelector = () => {
     setSelectedPurchaseCurrencyNetwork,
     selectedSellCurrencyNetwork,
     setSelectedSellCurrencyNetwork,
-    setBuyOptions,
     buyOptions,
     sellOptions,
-    setSellOptions,
-    setLoadingBuyOptions,
-    setLoadingSellOptions,
     loadingBuyOptions,
     isOnrampActive,
   } = useCoinbaseRampTransaction();
-
-  useEffect(() => {
-    const getSellOptions = async () => {
-      try {
-        setLoadingSellOptions(true);
-        if (selectedCountry && !sellOptions) {
-          const sellOptions = await generateSellOptions({
-            country: selectedCountry.id,
-            subdivision: selectedSubdivision ? selectedSubdivision : '',
-          });
-
-          setSellOptions(sellOptions);
-        }
-      } catch (error) {
-        console.error('Error fetching buy options:', error);
-      } finally {
-        setLoadingSellOptions(false);
-      }
-    };
-
-    getSellOptions();
-  }, [
-    selectedCountry,
-    selectedSubdivision,
-    buyOptions,
-    setBuyOptions,
-    setLoadingBuyOptions,
-    isOnrampActive,
-    setLoadingSellOptions,
-    sellOptions,
-    setSellOptions,
-  ]);
 
   const handleTokenSelectionChange = (key: Key | null) => {
     if (key) {

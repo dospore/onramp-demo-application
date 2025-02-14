@@ -6,7 +6,6 @@ import {
   CardBody,
   CardFooter,
   CardHeader,
-  Code,
   Input,
 } from '@nextui-org/react';
 import { Key, useState } from 'react';
@@ -44,8 +43,6 @@ export const FundCardDemo = () => {
   const availableCurrencies = buyOptions?.paymentCurrencies || [];
   return (
     <div className="flex flex-col items-center justify-center flex-wrap gap-4">
-      <Code className="text-white text-2xl p-4">{'<FundCard />'}</Code>
-
       <div className="flex justify-center items-center w-[500px] gap-4 flex-col">
         <FundCard
           key={`${asset}-${selectedCountry?.id}-${selectedCurrency?.id}-${selectedSubdivision}`}
