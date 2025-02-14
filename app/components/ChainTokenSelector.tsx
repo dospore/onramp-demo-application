@@ -1,3 +1,4 @@
+import { OnrampPurchaseCurrency } from '@coinbase/onchainkit/fund';
 import { Autocomplete, AutocompleteItem, Skeleton } from '@nextui-org/react';
 import { Key, useEffect, useMemo } from 'react';
 import { useCoinbaseRampTransaction } from '../contexts/CoinbaseRampTransactionContext';
@@ -185,7 +186,9 @@ export const ChainTokenSelector = () => {
             onSelectionChange={handleNetworkSelectionChange}
             selectedKey={
               isOnrampActive
-                ? selectedPurchaseCurrencyNetwork?.displayName
+                ? (
+                    selectedPurchaseCurrencyNetwork as OnrampPurchaseCurrency['networks'][0]
+                  )?.displayName
                 : selectedSellCurrencyNetwork?.display_name
             }
           >

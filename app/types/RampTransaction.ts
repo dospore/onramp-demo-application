@@ -1,9 +1,9 @@
-import { Country } from './BuyConfig';
+import { OnrampConfigCountry } from '@coinbase/onchainkit/fund';
 
 export interface RampTransaction {
   wallet?: string;
   address?: string;
-  country?: Country;
+  country?: OnrampConfigCountry;
   currency?: string;
   amount?: string;
   chainToken?: string;
