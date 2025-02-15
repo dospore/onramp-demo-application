@@ -1,7 +1,7 @@
 'use client';
 import { Modal, ModalBody, ModalContent, ModalHeader } from '@nextui-org/react';
 import Image from 'next/image';
-import { useState } from 'react';
+import { memo, useState } from 'react';
 import OrderHistoryIcon from '../assets/orderHistory.svg';
 import { useCoinbaseRampTransaction } from '../contexts/CoinbaseRampTransactionContext';
 import { AmountInput } from './AmountInput';
@@ -12,7 +12,7 @@ import { RampTransactionSummary } from './RampTransactionSummary';
 import { RegionSelector } from './RegionSelector';
 import { WalletConnector } from './WalletConnector';
 
-export const CustomIntegrationDemo = () => {
+export const CustomIntegrationDemo = memo(function CustomIntegrationDemo() {
   const [showOrderHistory, setShowOrderHistory] = useState(false);
   const { authenticated } = useCoinbaseRampTransaction();
 
@@ -67,4 +67,4 @@ export const CustomIntegrationDemo = () => {
       </Modal>
     </>
   );
-};
+});

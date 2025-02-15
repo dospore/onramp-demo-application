@@ -31,7 +31,7 @@ import {
 import { RampTransaction } from '../types/RampTransaction';
 
 isocountries.registerLocale(enLocale);
-export type Mode = 'onramp' | 'offramp';
+export type Mode = 'fund-card' | 'fund-button' | 'onramp' | 'offramp';
 interface CoinbaseRampTransactionContextType {
   mode: Mode;
   setMode: (mode: Mode) => void;
@@ -91,6 +91,8 @@ interface CoinbaseRampTransactionContextType {
   isOnrampActive: boolean;
   isOfframpActive: boolean;
   selectedPaymentMethodLimit: PaymentCurrencyLimit | undefined;
+  fetchingQuote: boolean;
+  setFetchingQuote: (fetchingQuote: boolean) => void;
 }
 
 const CoinbaseRampTransactionContext = createContext<
@@ -129,7 +131,7 @@ export const CoinbaseRampTransactionProvider = ({
   const [sellOptions, setSellOptions] = useState<SellOptionsResponse | null>(
     null
   );
-  const [mode, setMode] = useState<Mode>('onramp');
+  const [mode, setMode] = useState<Mode>('fund-card');
   const [selectedPaymentMethod, setSelectedPaymentMethod] =
     useState<OnrampPaymentMethod | null>(null);
   const [secureToken, setSecureToken] = useState<string | null>(null);
@@ -139,6 +141,7 @@ export const CoinbaseRampTransactionProvider = ({
   const [sellQuote, setSellQuote] = useState<SellQuoteResponse | null>(null);
   const [loadingBuyOptions, setLoadingBuyOptions] = useState(false);
   const [loadingSellOptions, setLoadingSellOptions] = useState(false);
+  const [fetchingQuote, setFetchingQuote] = useState(false);
   const countries = useMemo<
     Array<OnrampConfigCountry & { name?: string }>
   >(() => {
@@ -237,7 +240,8 @@ export const CoinbaseRampTransactionProvider = ({
       setSelectedCurrency(defaultCurrency);
       setSelectedPaymentMethod(defaultCurrency.limits[0]);
     }
-  }, [buyOptions, rampTransaction]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [buyOptions]);
 
   useEffect(() => {
     if (isOnrampActive) {
@@ -366,6 +370,8 @@ export const CoinbaseRampTransactionProvider = ({
     isOnrampActive,
     isOfframpActive,
     selectedPaymentMethodLimit,
+    fetchingQuote,
+    setFetchingQuote,
   };
   return (
     <CoinbaseRampTransactionContext.Provider value={contextValue}>

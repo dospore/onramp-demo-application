@@ -2,9 +2,10 @@
 import {
   fetchOnrampConfig,
   fetchOnrampOptions,
+  fetchOnrampQuote,
 } from '@coinbase/onchainkit/fund';
 import { Tab, Tabs } from '@nextui-org/react';
-import { useEffect, useState } from 'react';
+import { Key, useCallback, useEffect, useState } from 'react';
 import {
   Mode,
   useCoinbaseRampTransaction,
@@ -38,6 +39,12 @@ export const CryptoRamp = ({ partnerUserId }: ICryptoRampProps) => {
     sellOptions,
     setLoadingSellOptions,
     loadingSellOptions,
+    rampTransaction,
+    selectedPurchaseCurrency,
+    selectedPurchaseCurrencyNetwork,
+    isOnrampActive,
+    setBuyQuote,
+    setFetchingQuote,
   } = useCoinbaseRampTransaction();
 
   useEffect(() => {
@@ -110,12 +117,70 @@ export const CryptoRamp = ({ partnerUserId }: ICryptoRampProps) => {
       }
     };
 
+    const fetchBuyQuote = async () => {
+      if (
+        !rampTransaction?.currency ||
+        !rampTransaction.paymentMethod ||
+        !rampTransaction.country ||
+        !selectedPurchaseCurrency?.symbol
+      ) {
+        return;
+      }
+
+      setFetchingQuote(true);
+      try {
+        const response = await fetchOnrampQuote({
+          purchaseCurrency: selectedPurchaseCurrency?.symbol || '',
+          paymentCurrency: String(rampTransaction?.currency),
+          paymentMethod: String(rampTransaction?.paymentMethod),
+          paymentAmount: Number(rampTransaction?.amount).toFixed(2),
+          country: String(rampTransaction?.country?.id),
+          subdivision: String(selectedSubdivision),
+          purchaseNetwork: selectedPurchaseCurrencyNetwork?.name || '',
+        });
+        setFetchingQuote(false);
+        setBuyQuote(response);
+      } catch (err) {
+        console.error('Buy Quote Fetch Failed', err);
+      }
+    };
+
+    const fetchSellQuote = async () => {
+      try {
+        // TODO: Setup api to return pricing data to calculate
+        // amount to be sent to quote api
+        // const payload: SellQuoteRequest = {
+        //   sell_currency: selectedSellCurrency?.symbol || '',
+        //   sell_amount: convertFiatToTokenAmountForSellTransaction(),
+        //   cashout_currency: String(rampTransaction?.currency),
+        //   payment_method: String(rampTransaction?.paymentMethod),
+        //   country: String(rampTransaction?.country?.id),
+        //   subdivision: String(selectedSubdivision),
+        //   sell_network: selectedSellCurrencyNetwork?.name || '',
+        // };
+        // const response = await generateSellQuote(payload);
+        // setSellQuote(response);
+        setFetchingQuote(false);
+      } catch (err) {
+        // console.error('Sell Quote Fetch Failed', err);
+        console.error('RECEIVED AN ERORR FOR SELL QUOTE', err as Error);
+      }
+    };
+
     getSellOptions();
 
     getBuyconfig();
     getBuyOptions();
+
+    const intervalId = setInterval(
+      isOnrampActive ? fetchBuyQuote : fetchSellQuote,
+      10000
+    );
+
+    return () => clearInterval(intervalId);
+
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [selectedCountry, selectedSubdivision]);
 
   useEffect(() => {
     if (authenticated && step < 2) {
@@ -125,6 +190,13 @@ export const CryptoRamp = ({ partnerUserId }: ICryptoRampProps) => {
     }
   }, [authenticated, step, setStep]);
 
+  const handleModeChange = useCallback(
+    (key: Key) => {
+      setMode(key as Mode);
+    },
+    [setMode]
+  );
+
   return (
     <div className="flex justify-center items-center min-h-screen bg-zinc-950">
       <div className="crypto-ramp bg-black p-8 rounded-lg shadow-md w-full h-screen">
@@ -132,8 +204,8 @@ export const CryptoRamp = ({ partnerUserId }: ICryptoRampProps) => {
           <div className="flex gap-6 justify-center items-center w-full flex-col">
             <Tabs
               aria-label="Options"
-              onSelectionChange={(key) => setMode(key as Mode)}
-              selectedKey={mode.toLowerCase()}
+              onSelectionChange={handleModeChange}
+              selectedKey={mode}
             >
               <Tab key="fund-card" title="Fund Card">
                 <FundCardDemo />
