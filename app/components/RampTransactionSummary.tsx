@@ -1,4 +1,3 @@
-import { fetchOnrampQuote } from '@coinbase/onchainkit/fund';
 import { Address } from '@coinbase/onchainkit/identity';
 import ChevronDownIcon from '@heroicons/react/24/outline/ChevronDownIcon';
 import ChevronUpIcon from '@heroicons/react/24/outline/ChevronUpIcon';
@@ -31,25 +30,21 @@ export const RampTransactionSummary = () => {
     rampTransaction,
     selectedPurchaseCurrencyNetwork,
     selectedPurchaseCurrency,
-    selectedSubdivision,
     setSecureToken,
     secureToken,
     buyQuote,
-    setBuyQuote,
     partnerUserId,
     authenticated,
     loadingBuyOptions,
     selectedPaymentMethod,
     sellQuote,
-    setSellQuote,
     selectedSellCurrency,
-    selectedSellCurrencyNetwork,
     loadingSellOptions,
     isOnrampActive,
     isOfframpActive,
     selectedPaymentMethodLimit,
+    fetchingQuote,
   } = useCoinbaseRampTransaction();
-  const [fetchingQuote, setFetchingQuote] = useState(false);
   const [showExpandedFees, setShowExpandedFees] = useState(false);
   const [txSuccess, setTxSuccess] = useState(false);
   const [txSuccessQuoteSummary, setTxSuccessQuoteSummary] =
@@ -118,90 +113,19 @@ export const RampTransactionSummary = () => {
     return secureToken != null;
   }, [secureToken]);
 
-  const getExchangePrice = (decimals = 5) => {
-    if (isOnrampActive && buyQuote) {
-      return (
-        Number(buyQuote.paymentSubtotal?.value) /
-        Number(buyQuote.purchaseAmount?.value)
-      ).toFixed(decimals);
-    }
-
-    return '0';
-  };
-
-  useEffect(() => {
-    const fetchBuyQuote = async () => {
-      if (
-        !rampTransaction?.currency ||
-        !rampTransaction.paymentMethod ||
-        !rampTransaction.country ||
-        !selectedPurchaseCurrency?.symbol
-      ) {
-        return;
+  const exchangePrice = useMemo(
+    (decimals = 5) => {
+      if (isOnrampActive && buyQuote) {
+        return (
+          Number(buyQuote.paymentSubtotal?.value) /
+          Number(buyQuote.purchaseAmount?.value)
+        ).toFixed(decimals);
       }
-      try {
-        const response = await fetchOnrampQuote({
-          purchaseCurrency: selectedPurchaseCurrency?.symbol || '',
-          paymentCurrency: String(rampTransaction?.currency),
-          paymentMethod: String(rampTransaction?.paymentMethod),
-          paymentAmount: Number(rampTransaction?.amount).toFixed(2),
-          country: String(rampTransaction?.country?.id),
-          subdivision: String(selectedSubdivision),
-          purchaseNetwork: selectedPurchaseCurrencyNetwork?.name || '',
-        });
 
-        setBuyQuote(response);
-      } catch (err) {
-        console.error('Buy Quote Fetch Failed', err);
-      }
-    };
-
-    const fetchSellQuote = async () => {
-      try {
-        // TODO: Setup api to return pricing data to calculate
-        // amount to be sent to quote api
-        // const payload: SellQuoteRequest = {
-        //   sell_currency: selectedSellCurrency?.symbol || '',
-        //   sell_amount: convertFiatToTokenAmountForSellTransaction(),
-        //   cashout_currency: String(rampTransaction?.currency),
-        //   payment_method: String(rampTransaction?.paymentMethod),
-        //   country: String(rampTransaction?.country?.id),
-        //   subdivision: String(selectedSubdivision),
-        //   sell_network: selectedSellCurrencyNetwork?.name || '',
-        // };
-        // const response = await generateSellQuote(payload);
-        // setSellQuote(response);
-      } catch (err) {
-        // console.error('Sell Quote Fetch Failed', err);
-        console.error('RECEIVED AN ERORR FOR SELL QUOTE', err as Error);
-      }
-    };
-
-    setFetchingQuote(true);
-    if (isOnrampActive) {
-      fetchBuyQuote().then(() => setFetchingQuote(false));
-    } else {
-      fetchSellQuote().then(() => setFetchingQuote(false));
-    }
-
-    const intervalId = setInterval(
-      isOnrampActive ? fetchBuyQuote : fetchSellQuote,
-      10000
-    );
-
-    return () => clearInterval(intervalId);
-  }, [
-    rampTransaction,
-    selectedPurchaseCurrencyNetwork,
-    selectedPurchaseCurrency,
-    selectedSubdivision,
-    setBuyQuote,
-    authenticated,
-    selectedSellCurrency?.symbol,
-    selectedSellCurrencyNetwork?.name,
-    setSellQuote,
-    isOnrampActive,
-  ]);
+      return '0';
+    },
+    [isOnrampActive, buyQuote]
+  );
 
   const transactionLink = useMemo(() => {
     const quoteId =
@@ -258,7 +182,7 @@ export const RampTransactionSummary = () => {
     transactionLink,
   ]);
 
-  const getTransactionSummaryLabel = () => {
+  const transactionSummaryLabel = useMemo(() => {
     const action = isOnrampActive ? 'Buy' : 'Sell';
     const currency = isOnrampActive
       ? selectedPurchaseCurrency?.symbol
@@ -266,15 +190,16 @@ export const RampTransactionSummary = () => {
         ? selectedSellCurrency?.symbol
         : '';
     return `${action} ${formatCurrency(rampTransaction?.amount || '0', getCurrencySymbol(rampTransaction?.currency))}  of ${currency}`;
-  };
+  }, [
+    isOnrampActive,
+    rampTransaction?.amount,
+    rampTransaction?.currency,
+    selectedPurchaseCurrency?.symbol,
+    selectedSellCurrency?.symbol,
+    isOfframpActive,
+  ]);
 
-  const getAmountReceived = () => {
-    return isOnrampActive
-      ? `${formatCurrency(buyQuote?.purchaseAmount?.value || '0', buyQuote?.purchaseAmount?.currency || '', 3, true)}`
-      : `${formatCurrency(sellQuote?.sell_amount?.value || '0', sellQuote?.sell_amount?.currency || '', 3, true)}`;
-  };
-
-  const getTotalCostLabel = () => {
+  const totalCostLabel = useMemo(() => {
     const fees = formatCurrency(
       (
         (Number(
@@ -318,31 +243,51 @@ export const RampTransactionSummary = () => {
         </div>
       </div>
     );
-  };
+  }, [
+    isOnrampActive,
+    buyQuote?.coinbaseFee?.value,
+    buyQuote?.networkFee?.value,
+    buyQuote?.paymentTotal?.value,
+    sellQuote?.coinbase_fee?.value,
+    sellQuote?.cashout_total?.value,
+    rampTransaction?.currency,
+    showExpandedFees,
+  ]);
 
-  const getExchangePriceLabel = () => {
+  const exchangePriceLabel = useMemo(() => {
     if (isOnrampActive && buyQuote) {
       return `${formatCurrency(
-        getExchangePrice(),
+        exchangePrice,
         getCurrencySymbol(rampTransaction?.currency)
       )}`;
     } else if (isOfframpActive && sellQuote) {
       return `${formatCurrency(
-        getExchangePrice(),
+        exchangePrice,
         getCurrencySymbol(rampTransaction?.currency)
       )}`;
     }
 
     return '-';
-  };
+  }, [
+    isOnrampActive,
+    buyQuote,
+    isOfframpActive,
+    sellQuote,
+    exchangePrice,
+    rampTransaction?.currency,
+  ]);
 
-  const getTransactionSummaryTitle = () => {
+  const transactionSummaryTitle = useMemo(() => {
     return isOnrampActive
       ? `Buy ${selectedPurchaseCurrency?.symbol}`
       : `Sell ${selectedSellCurrency?.symbol}`;
-  };
+  }, [
+    isOnrampActive,
+    selectedPurchaseCurrency?.symbol,
+    selectedSellCurrency?.symbol,
+  ]);
 
-  const getExchangePriceHtml = () => {
+  const exchangePriceHtml = useMemo(() => {
     return (
       <>
         <span>
@@ -351,10 +296,21 @@ export const RampTransactionSummary = () => {
             : selectedSellCurrency?.symbol}{' '}
           Price
         </span>
-        <span className="font-bold">{getExchangePriceLabel()}</span>
+        <span className="font-bold">{exchangePriceLabel}</span>
       </>
     );
-  };
+  }, [
+    isOnrampActive,
+    selectedPurchaseCurrency?.symbol,
+    selectedSellCurrency?.symbol,
+    exchangePriceLabel,
+  ]);
+
+  const amountReceived = useMemo(() => {
+    return isOnrampActive
+      ? `${formatCurrency(buyQuote?.purchaseAmount?.value || '0', buyQuote?.purchaseAmount?.currency || '', 3, true)}`
+      : `${formatCurrency(sellQuote?.sell_amount?.value || '0', sellQuote?.sell_amount?.currency || '', 3, true)}`;
+  }, [isOnrampActive, buyQuote, sellQuote]);
 
   return loadingBuyOptions || loadingSellOptions || fetchingQuote ? (
     <div className="w-full md:p-8 my-auto text-sm">
@@ -408,7 +364,7 @@ export const RampTransactionSummary = () => {
               <div className="flex flex-col">
                 <p className="text-md">Transaction Summary</p>
                 <p className="text-small text-default-500">
-                  {getTransactionSummaryTitle()}
+                  {transactionSummaryTitle}
                 </p>
               </div>
             </CardHeader>
@@ -417,10 +373,10 @@ export const RampTransactionSummary = () => {
               <div className="space-y-4">
                 <div className="flex flex-col justify-between mt-4 mb-8 text-center">
                   <p className="m-auto text-cb-blue text-lg">
-                    {getTransactionSummaryLabel()}
+                    {transactionSummaryLabel}
                   </p>
                   <div className="flex mx-auto gap-2 mt-4 text-">
-                    {getExchangePriceHtml()}
+                    {exchangePriceHtml}
                   </div>
                 </div>
                 <div className="border-1 border-white rounded-md p-2">
@@ -428,7 +384,7 @@ export const RampTransactionSummary = () => {
                     <span className="flex items-center gap-2">
                       Amount Received
                     </span>
-                    <span className="font-bold">{getAmountReceived()}</span>
+                    <span className="font-bold">{amountReceived}</span>
                   </div>
                   <Divider />
                   <div className="flex justify-between py-4 px-2">
@@ -466,7 +422,7 @@ export const RampTransactionSummary = () => {
                   sure you own the wallet address listed
                 </div>
 
-                <div>{getTotalCostLabel()}</div>
+                <div>{totalCostLabel}</div>
 
                 {showExpandedFees && (
                   <>
