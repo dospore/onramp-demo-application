@@ -11,6 +11,8 @@ import {
 import { Key, useState } from 'react';
 
 import { FundCard, FundCardPropsReact } from '@coinbase/onchainkit/fund';
+import { NFTCardDefault } from '@coinbase/onchainkit/nft';
+
 import { useCoinbaseRampTransaction } from '../contexts/CoinbaseRampTransactionContext';
 import { RegionSelector } from './RegionSelector';
 
@@ -26,7 +28,7 @@ export const FundCardDemo = () => {
   const [asset, setAsset] = useState('BTC');
   const [presetAmountInputs, setPresetAmountInputs] = useState<
     FundCardPropsReact['presetAmountInputs']
-  >(['10', '20', '30']);
+  >(['2', '69', '420']);
 
   const handleCurrencySelection = (value: Key | null) => {
     if (value) {
@@ -45,6 +47,7 @@ export const FundCardDemo = () => {
     <div className="flex flex-col items-center justify-center flex-wrap gap-4">
       <div className="flex justify-center items-center w-[500px] gap-4 flex-col">
         <FundCard
+          headerText="Mikes Fund Card"
           key={`${asset}-${selectedCountry?.id}-${selectedCurrency?.id}-${selectedSubdivision}`}
           assetSymbol={asset}
           country={selectedCountry?.id || 'US'}
@@ -53,6 +56,11 @@ export const FundCardDemo = () => {
           presetAmountInputs={presetAmountInputs}
         />
       </div>
+
+      <NFTCardDefault
+        contractAddress="0xb4703a3a73aec16e764cbd210b0fde9efdab8941"
+        tokenId="1"
+      />
 
       <div className="flex flex-col gap-2 items-center p-4">
         <Card>
